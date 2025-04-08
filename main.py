@@ -984,7 +984,6 @@ async def txt_handler(bot: Client, m: Message):
                 failed_count += 1
                 continue
 
-    start_time = None
     await m.reply_text(f"{end_message}")
     
 @bot.on_message(filters.text & filters.private)
