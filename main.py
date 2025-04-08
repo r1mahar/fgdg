@@ -680,10 +680,18 @@ async def txt_handler(bot: Client, m: Message):
             f"**•File name** - `{b_name}`\n**•Total Links Found In TXT** - `{len(links)}`\n**•RANGE** - `({count}-{end_count})`\n**•Resolution** - `{res}({raw_text2})`\n**•Caption** - **{CR}**\n**•Thumbnail** - **{thumb}**"
         )
     
+    failed_count = 0
+    
+    global start_time, total_running_time, max_running_time
+
+    total_running_time = load_bot_running_time(collection)
+    max_running_time = load_max_running_time(collection)
+    # Handle the case where only one link or starting from the first link
+    
     if count == 1:
         chat_id = m.chat.id
         #========================= PINNING THE BATCH NAME ======================================
-        batch_message: Message = await bot.send_message(chat_id, f"</code></pre>🎯Target Batch : {b_name}</code></pre>")
+        batch_message: Message = await bot.send_message(chat_id, f"**{b_name}**")
         
         try:
             await bot.pin_chat_message(chat_id, batch_message.id)
@@ -692,23 +700,61 @@ async def txt_handler(bot: Client, m: Message):
             await bot.send_message(chat_id, f"Failed to pin message: {str(e)}")
             message_link = None  # Fallback value
 
-        message_id = batch_message.id 
+        message_id = batch_message.id   
         pinning_message_id = message_id + 1
+        
+        if message_link:
+            end_message = (f"✨𝙱𝚊𝚝𝚌𝚑 𝚂𝚞𝚖𝚖𝚊𝚛𝚢✨\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔢𝙸𝚗𝚍𝚎𝚡 𝚁𝚊𝚗𝚐𝚎 » ({raw_text} to {len(links)})\n"
+                           f"📚𝙱𝚊𝚝𝚌𝚑 𝙽𝚊𝚖𝚎 » {b_name}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"✨𝚃𝚡𝚝 𝚂𝚞𝚖𝚖𝚊𝚛𝚢✨ : {len(links)}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔹𝚉𝙸𝙿 » {zip_count}  🔹𝙿𝙳𝙵 » {pdf_count}\n"
+                           f"🔹𝙸𝚖𝚐 » {img_count}  🔹𝚅𝚒𝚍𝚎𝚘 » {video_count}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔹𝙵𝚊𝚒𝚕𝚎𝚍 𝙻𝚒𝚗𝚔𝚜 » {failed_count}\n"
+                           f"✅𝚂𝚝𝚊𝚝𝚞𝚜 » 𝙲𝚘𝚖𝚙𝚕𝚎𝚝𝚎𝚍")
+        else:
+            end_message = (f"✨𝙱𝚊𝚝𝚌𝚑 𝚂𝚞𝚖𝚖𝚊𝚛𝚢✨\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔢𝙸𝚗𝚍𝚎𝚡 𝚁𝚊𝚗𝚐𝚎 » ({raw_text} to {len(links)})\n"
+                           f"📚𝙱𝚊𝚝𝚌𝚑 𝙽𝚊𝚖𝚎 » {b_name}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"✨𝚃𝚡𝚝 𝚂𝚞𝚖𝚖𝚊𝚛𝚢✨ : {len(links)}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔹𝚉𝙸𝙿 » {zip_count}  🔹𝙿𝙳𝙵 » {pdf_count}\n"
+                           f"🔹𝙸𝚖𝚐 » {img_count}  🔹𝚅𝚒𝚍𝚎𝚘 » {video_count}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔹𝙵𝚊𝚒𝚕𝚎𝚍 𝙻𝚒𝚗𝚔𝚜 » {failed_count}\n"
+                           f"✅𝚂𝚝𝚊𝚝𝚞𝚜 » 𝙲𝚘𝚖𝚙𝚕𝚎𝚝𝚎𝚍")
 
         try:
             await bot.delete_messages(chat_id, pinning_message_id)
         except Exception as e:
             await bot.send_message(chat_id, f"Failed to delete pinning message: {str(e)}")
-            
-    failed_count =0 
+    else:
+        end_message = (f"✨𝙱𝚊𝚝𝚌𝚑 𝚂𝚞𝚖𝚖𝚊𝚛𝚢✨\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔢𝙸𝚗𝚍𝚎𝚡 𝚁𝚊𝚗𝚐𝚎 » ({raw_text} to {len(links)})\n"
+                           f"📚𝙱𝚊𝚝𝚌𝚑 𝙽𝚊𝚖𝚎 » {b_name}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"✨𝚃𝚡𝚝 𝚂𝚞𝚖𝚖𝚊𝚛𝚢✨ : {len(links)}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔹𝚉𝙸𝙿 » {zip_count}  🔹𝙿𝙳𝙵 » {pdf_count}\n"
+                           f"🔹𝙸𝚖𝚐 » {img_count}  🔹𝚅𝚒𝚍𝚎𝚘 » {video_count}\n"
+                           f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+                           f"🔹𝙵𝚊𝚒𝚕𝚎𝚍 𝙻𝚒𝚗𝚔𝚜 » {failed_count}\n"
+                           f"✅𝚂𝚝𝚊𝚝𝚞𝚜 » 𝙲𝚘𝚖𝚙𝚕𝚎𝚝𝚎𝚍")
 
-    count =int(raw_text)    
-    try:
-        for i in range(count - 1, end_count):
-            if total_running_time >= max_running_time:
-                await m.reply_text(f"⏳ You have used your {max_running_time / 3600:.2f} hours of bot running time. Please contact the owner to reset it.")
-                return
-            start_time = time.time()
+    for i in range(count - 1, end_count):
+        if total_running_time >= max_running_time:
+            await m.reply_text(f"⏳ You have used your {max_running_time / 3600:.2f} hours of bot running time. Please contact the owner to reset it.")
+            return
+
+        start_time = time.time()
+        try:
             Vxy = links[i][1].replace("file/d/","uc?export=download&id=").replace("www.youtube-nocookie.com/embed", "youtu.be").replace("?modestbranding=1", "").replace("/view?usp=sharing","")
             url = "https://" + Vxy
             link0 = "https://" + Vxy
@@ -927,7 +973,7 @@ async def txt_handler(bot: Client, m: Message):
                 elapsed_time = time.time() - start_time
                 total_running_time = save_bot_running_time(collection, elapsed_time)
                 start_time = None
-
+            
             except Exception as e:
                 await m.reply_text(f'——— ✨ [{str(count).zfill(3)}]({link0}) ✨ ———'
                                    f'⚠️ 𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐢𝐧𝐠 𝐈𝐧𝐭𝐞𝐫𝐮𝐩𝐭𝐞𝐝\n\n'
@@ -939,21 +985,7 @@ async def txt_handler(bot: Client, m: Message):
                 continue
 
     start_time = None
-
-    except Exception as e:
-        await m.reply_text(e)
-    await m.reply_text(f"`✨𝙱𝚊𝚝𝚌𝚑 𝚂𝚞𝚖𝚖𝚊𝚛𝚢✨\n"
-                       f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
-                       f"🔢𝙸𝚗𝚍𝚎𝚡 𝚁𝚊𝚗𝚐𝚎 » ({raw_text} to {len(links)})\n"
-                       f"📚𝙱𝚊𝚝𝚌𝚑 𝙽𝚊𝚖𝚎 » {b_name}\n"
-                       f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
-                       f"✨𝚃𝚡𝚝 𝚂𝚞𝚖𝚖𝚊𝚛𝚢✨ : {len(links)}\n"
-                       f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
-                       f"🔹𝚉𝙸𝙿 » {zip_count}  🔹𝙿𝙳𝙵 » {pdf_count}\n"
-                       f"🔹𝙸𝚖𝚐 » {img_count}  🔹𝚅𝚒𝚍𝚎𝚘 » {video_count}\n"
-                       f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
-                       f"🔹𝙵𝚊𝚒𝚕𝚎𝚍 𝙻𝚒𝚗𝚔𝚜 » {failed_count}\n"
-                       f"✅𝚂𝚝𝚊𝚝𝚞𝚜 » 𝙲𝚘𝚖𝚙𝚕𝚎𝚝𝚎𝚍`")
+    await m.reply_text(f"{end_message}")
     
 @bot.on_message(filters.text & filters.private)
 async def text_handler(bot: Client, m: Message):
